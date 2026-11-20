@@ -84,4 +84,15 @@ describe('TaskManagerScreen', () => {
     expect(screen.getByText('Corregir navegación')).toBeTruthy();
     expect(screen.queryByText('Validar login')).toBeNull();
   });
+
+  it('rechaza una tarea cuyo título contiene solo espacios', async () => {
+    const screen = await renderLoadedScreen();
+
+    expect(screen.getAllByTestId(/^toggle-/)).toHaveLength(5);
+    fireEvent.changeText(screen.getByTestId('new-task-input'), '   ');
+    fireEvent.press(screen.getByTestId('add-task-button'));
+
+    expect(screen.getByText('Ingresá un nombre válido para continuar.')).toBeTruthy();
+    expect(screen.getAllByTestId(/^toggle-/)).toHaveLength(5);
+  });
 });

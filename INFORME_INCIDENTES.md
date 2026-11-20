@@ -9,7 +9,7 @@
 **Entorno (Expo SDK, Android, dispositivo):** Expo SDK 57, Jest 29; verificación automatizada en Windows. La prueba manual en dispositivo queda pendiente.
 
 ## Resumen ejecutivo
-Se investigan cuatro defectos del gestor: actualización visual del estado, finalización de la carga ante un error, normalización de la búsqueda y validación de títulos. La línea base tuvo 6 de 9 pruebas aprobadas. Hasta esta etapa se corrigieron 3 de los 4 defectos.
+Se investigaron y corrigieron cuatro defectos del gestor: actualización visual del estado, finalización de la carga ante un error, normalización de la búsqueda y validación de títulos. La línea base tuvo 6 de 9 pruebas aprobadas.
 
 ## Incidencia 1
 - **Título de incidencia:** El estado de la tarea se actualiza recién después de otro cambio de pantalla.
@@ -48,7 +48,16 @@ Se investigan cuatro defectos del gestor: actualización visual del estado, fina
 - **Estado:** Corregido. Verificación manual en dispositivo pendiente.
 
 ## Incidencia 4
-Copiar los mismos campos de la incidencia 1.
+- **Título de incidencia:** El formulario acepta un título compuesto solo por espacios.
+- **Pasos para reproducir:** Cargar las tareas, ingresar tres espacios en `NUEVA TAREA`, presionar `Agregar` y observar el mensaje y la cantidad de tarjetas.
+- **Esperado / observado:** Se esperaba el mensaje `Ingresá un nombre válido para continuar.` y conservar 5 tareas. Antes de la corrección apareció `Tarea agregada.` y el inspector mostró 6 tareas, incluida una tarjeta sin texto visible.
+- **Herramienta usada (DevTools / consola / test):** Jest e inspector de React Native Testing Library.
+- **Hipótesis y evidencia:** La función solo comprobaba la longitud original. Tres espacios tenían longitud 3 y se consideraban válidos. La prueba unitaria recibió `true` y la prueba de pantalla inspeccionó `TAREAS 6`. Evidencia: [incidencia 4](evidencias/incidencia-4-validacion.md).
+- **Archivo y función involucrada:** `src/utils/taskValidation.ts`, función `isValidTaskTitle`; flujo `addTask` de `app/index.tsx` verificado sin cambios adicionales.
+- **Causa raíz:** La validación no eliminaba los espacios externos antes de comprobar si había contenido.
+- **Corrección aplicada:** Se aplicó `trim` antes de evaluar la longitud del título.
+- **Prueba de regresión:** Las 3 pruebas de `taskValidation` y las 4 pruebas de pantalla pasaron. Se rechazaron el texto vacío y los tres espacios, se aceptó un título con palabras y el formulario mantuvo las 5 tareas ante la entrada inválida.
+- **Estado:** Corregido. Verificación manual en dispositivo pendiente.
 
 ## Otras incidencias (opcional)
 
@@ -56,7 +65,7 @@ Copiar los mismos campos de la incidencia 1.
 | Prueba | Antes | Después | Evidencia |
 |---|---|---|---|
 | Búsqueda | `VALIDAR` y `  login  ` devolvieron 0 resultados; la lista no cambió al escribir. | Las consultas se normalizan, la lista cambia al escribir y se conservan los filtros por estado. | [Pruebas de la incidencia 3](evidencias/incidencia-3-busqueda.md) |
-| Validación | | | |
+| Validación | Tres espacios devolvieron `true` y el formulario agregó una sexta tarea sin título visible. | Tres espacios se rechazan, un título con palabras se acepta y la lista conserva 5 tareas. | [Pruebas de la incidencia 4](evidencias/incidencia-4-validacion.md) |
 | Actualización de estado | El número de tarjetas completadas siguió en 2 después de marcar una tercera. | El cambio al marcar y desmarcar es inmediato y respeta los filtros. | [Prueba de la incidencia 1](evidencias/incidencia-1-actualizacion-estado.md) |
 | Error de servicio | El mensaje apareció, pero `Consultando tareas…` siguió visible. | La carga termina ante el error y `Recargar datos` recupera el listado. | [Prueba y registro de la incidencia 2](evidencias/incidencia-2-error-servicio.md) |
 
