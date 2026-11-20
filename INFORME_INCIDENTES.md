@@ -6,7 +6,7 @@
 
 **Proyecto / rama Git:** gestor-tareas-edi / main
 
-**Entorno (Expo SDK, Android, dispositivo):** Expo SDK 57, Jest 29; verificación automatizada en Windows. La prueba manual en dispositivo queda pendiente.
+**Entorno (Expo SDK, Android, dispositivo):** Expo SDK 57, Jest 29; verificación automatizada en Windows. La prueba manual en dispositivo queda pendiente porque el proyecto no incluye `react-native-web` y no había un dispositivo Expo disponible.
 
 ## Resumen ejecutivo
 Se investigaron y corrigieron cuatro defectos del gestor: actualización visual del estado, finalización de la carga ante un error, normalización de la búsqueda y validación de títulos. La línea base tuvo 6 de 9 pruebas aprobadas.
@@ -61,6 +61,8 @@ Se investigaron y corrigieron cuatro defectos del gestor: actualización visual 
 
 ## Otras incidencias (opcional)
 
+No se detectaron otras incidencias dentro del alcance. No se agregaron dependencias ni se modificaron el SDK o el servicio simulado.
+
 ## Pruebas
 | Prueba | Antes | Después | Evidencia |
 |---|---|---|---|
@@ -69,7 +71,9 @@ Se investigaron y corrigieron cuatro defectos del gestor: actualización visual 
 | Actualización de estado | El número de tarjetas completadas siguió en 2 después de marcar una tercera. | El cambio al marcar y desmarcar es inmediato y respeta los filtros. | [Prueba de la incidencia 1](evidencias/incidencia-1-actualizacion-estado.md) |
 | Error de servicio | El mensaje apareció, pero `Consultando tareas…` siguió visible. | La carga termina ante el error y `Recargar datos` recupera el listado. | [Prueba y registro de la incidencia 2](evidencias/incidencia-2-error-servicio.md) |
 
+La verificación final aprobó 13 de 13 pruebas, `npm run typecheck` y `git diff --check`. La salida completa y los pasos manuales pendientes están en [verificación final](evidencias/verificacion-final.md).
+
 ## Conclusión y control de cambios
-- **Commit final (hash):**
-- **Mensaje del commit:**
-- **Qué aprendí y cómo lo aplicaría a mi app final:**
+- **Commit final (hash):** `12dadac26b1b0875a9c48b4ed0ec8a2766792269`
+- **Mensaje del commit:** `fix: rechazar títulos formados solo por espacios`
+- **Qué aprendí y cómo lo aplicaría a mi app final:** Los estados de React deben actualizarse sin mutaciones, los indicadores de carga deben cerrarse en todos los caminos asíncronos y los datos ingresados por una persona deben normalizarse antes de compararlos o validarlos. En una app final acompañaría cada corrección con una prueba de regresión del componente y una prueba de la función involucrada.
