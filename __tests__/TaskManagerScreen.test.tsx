@@ -68,4 +68,20 @@ describe('TaskManagerScreen', () => {
     expect(screen.queryByText('Consultando tareas…')).toBeNull();
     expect(screen.getByText('Validar login')).toBeTruthy();
   });
+
+  it('actualiza los resultados mientras cambia la búsqueda', async () => {
+    const screen = await renderLoadedScreen();
+
+    fireEvent.changeText(screen.getByTestId('search-input'), 'login');
+    expect(screen.getByText('Validar login')).toBeTruthy();
+    expect(screen.queryByText('Corregir navegación')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('search-input'), 'VALIDAR');
+    expect(screen.getByText('Validar login')).toBeTruthy();
+    expect(screen.queryByText('Revisar validaciones')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('search-input'), '  navegación  ');
+    expect(screen.getByText('Corregir navegación')).toBeTruthy();
+    expect(screen.queryByText('Validar login')).toBeNull();
+  });
 });

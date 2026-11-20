@@ -9,7 +9,7 @@
 **Entorno (Expo SDK, Android, dispositivo):** Expo SDK 57, Jest 29; verificación automatizada en Windows. La prueba manual en dispositivo queda pendiente.
 
 ## Resumen ejecutivo
-Se investigan cuatro defectos del gestor: actualización visual del estado, finalización de la carga ante un error, normalización de la búsqueda y validación de títulos. La línea base tuvo 6 de 9 pruebas aprobadas. Hasta esta etapa se corrigieron 2 de los 4 defectos.
+Se investigan cuatro defectos del gestor: actualización visual del estado, finalización de la carga ante un error, normalización de la búsqueda y validación de títulos. La línea base tuvo 6 de 9 pruebas aprobadas. Hasta esta etapa se corrigieron 3 de los 4 defectos.
 
 ## Incidencia 1
 - **Título de incidencia:** El estado de la tarea se actualiza recién después de otro cambio de pantalla.
@@ -36,7 +36,16 @@ Se investigan cuatro defectos del gestor: actualización visual del estado, fina
 - **Estado:** Corregido. Verificación manual en dispositivo pendiente.
 
 ## Incidencia 3
-Copiar los mismos campos de la incidencia 1.
+- **Título de incidencia:** La búsqueda no ignora mayúsculas ni espacios externos y no actualiza los resultados mientras se escribe.
+- **Pasos para reproducir:** Cargar las tareas y buscar `VALIDAR`, `  login  ` y `login`. Observar el listado después de cada cambio y repetir con los filtros `Pendientes` y `Completadas`.
+- **Esperado / observado:** Se esperaba encontrar `Validar login` sin importar las mayúsculas o los espacios externos y actualizar la lista con cada cambio. Antes de la corrección las dos consultas normalizadas devolvían 0 resultados y el tablero conservaba tareas que no coincidían con `login`.
+- **Herramienta usada (DevTools / consola / test):** Jest e inspector de consultas de React Native Testing Library.
+- **Hipótesis y evidencia:** La comparación usaba `includes` con los valores originales y `useMemo` no dependía de `query`. Fallaron las dos pruebas unitarias y el inspector todavía encontró `Corregir navegación` tras escribir `login`. Evidencia: [incidencia 3](evidencias/incidencia-3-busqueda.md).
+- **Archivo y función involucrada:** `src/utils/taskFilters.ts`, función `filterTasks`; `app/index.tsx`, cálculo `visibleTasks`.
+- **Causa raíz:** Ni la consulta ni el título se normalizaban, y el valor memorizado solo se recalculaba cuando cambiaban `tasks` o `status`.
+- **Corrección aplicada:** Se aplicaron `trim` y conversión a minúsculas a la consulta, se normalizó el título antes de compararlo y se agregó `query` a las dependencias de `useMemo`.
+- **Prueba de regresión:** Las 4 pruebas de `taskFilters` y las 3 pruebas de pantalla pasaron. Incluyen mayúsculas, espacios, filtros por estado y actualización mientras se escribe.
+- **Estado:** Corregido. Verificación manual en dispositivo pendiente.
 
 ## Incidencia 4
 Copiar los mismos campos de la incidencia 1.
@@ -46,7 +55,7 @@ Copiar los mismos campos de la incidencia 1.
 ## Pruebas
 | Prueba | Antes | Después | Evidencia |
 |---|---|---|---|
-| Búsqueda | | | |
+| Búsqueda | `VALIDAR` y `  login  ` devolvieron 0 resultados; la lista no cambió al escribir. | Las consultas se normalizan, la lista cambia al escribir y se conservan los filtros por estado. | [Pruebas de la incidencia 3](evidencias/incidencia-3-busqueda.md) |
 | Validación | | | |
 | Actualización de estado | El número de tarjetas completadas siguió en 2 después de marcar una tercera. | El cambio al marcar y desmarcar es inmediato y respeta los filtros. | [Prueba de la incidencia 1](evidencias/incidencia-1-actualizacion-estado.md) |
 | Error de servicio | El mensaje apareció, pero `Consultando tareas…` siguió visible. | La carga termina ante el error y `Recargar datos` recupera el listado. | [Prueba y registro de la incidencia 2](evidencias/incidencia-2-error-servicio.md) |
