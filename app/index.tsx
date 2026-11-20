@@ -28,10 +28,11 @@ export default function TaskManagerScreen() {
     try {
       const records = await fetchTasks(simulateFailure);
       setTasks(records);
-      setLoading(false);
     } catch (caught) {
       console.error('[taskService] No se cargaron las tareas', caught);
       setError('No pudimos cargar las tareas. Probá otra vez.');
+    } finally {
+      setLoading(false);
     }
   }
 
