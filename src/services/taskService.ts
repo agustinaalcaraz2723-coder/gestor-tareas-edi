@@ -1,18 +1,94 @@
-import type { Task } from '../types/task';
+import type { CreateTaskInput, Task, TaskFilters, TaskStatus } from '../types/task';
 
-const INITIAL_TASKS: Task[] = [
-  { id: 't01', title: 'Validar login', description: 'Comprobar campos vacíos y credenciales incorrectas.', priority: 'alta', completed: false },
-  { id: 't02', title: 'Corregir navegación', description: 'Validar el regreso desde el detalle.', priority: 'media', completed: true },
-  { id: 't03', title: 'Probar API lenta', description: 'Simular una demora y verificar los indicadores de carga.', priority: 'alta', completed: false },
-  { id: 't04', title: 'Generar reporte', description: 'Documentar los fallos detectados y su corrección.', priority: 'baja', completed: false },
-  { id: 't05', title: 'Revisar validaciones', description: 'Asegurar el tratamiento de espacios y datos vacíos.', priority: 'media', completed: true },
-];
+const API_URL = (
+  process.env.EXPO_PUBLIC_API_URL || 'https://backend-proyecto.n7softwares.com/api/v1'
+).replace(/\/+$/, '');
 
-// Servicio mock: 700 ms de latencia, no requiere conexión ni servidor backend.
-export async function fetchTasks(simulateFailure = false): Promise<Task[]> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 700));
-  if (simulateFailure) {
-    throw new Error('HTTP 503: servidor temporalmente indisponible (simulado)');
+const statusValues: Record<TaskStatus, 'all' | 'pending' | 'completed'> = {
+  todas: 'all',
+  pendientes: 'pending',
+  completadas: 'completed',
+};
+
+type ApiErrorBody = {
+  error?: string;
+  message?: string;
+};
+
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
   }
-  return INITIAL_TASKS.map((task) => ({ ...task }));
 }
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+
+  if (options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  const text = await response.text();
+  let data: unknown;
+
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = text;
+    }
+  }
+
+  if (!response.ok) {
+    const body = typeof data === 'object' && data !== null ? data as ApiErrorBody : null;
+    const message = body?.message || body?.error || `La API respondió con estado ${response.status}.`;
+    throw new ApiError(response.status, message);
+  }
+
+  return data as T;
+}
+
+function buildListPath(filters: TaskFilters): string {
+  const params = new URLSearchParams();
+  const search = filters.search?.trim();
+
+  if (search) {
+    params.set('search', search);
+  }
+
+  params.set('status', statusValues[filters.status || 'todas']);
+  return `/tasks?${params.toString()}`;
+}
+
+export const tasksService = {
+  list(filters: TaskFilters = {}, signal?: AbortSignal): Promise<Task[]> {
+    return request<Task[]>(buildListPath(filters), { signal });
+  },
+
+  get(id: number, signal?: AbortSignal): Promise<Task> {
+    return request<Task>(`/tasks/${id}`, { signal });
+  },
+
+  create(input: CreateTaskInput): Promise<Task> {
+    return request<Task>('/tasks', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  },
+
+  setCompleted(id: number, completed: boolean): Promise<Task> {
+    return request<Task>(`/tasks/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ completed }),
+    });
+  },
+
+  remove(id: number): Promise<void> {
+    return request<void>(`/tasks/${id}`, { method: 'DELETE' });
+  },
+};
