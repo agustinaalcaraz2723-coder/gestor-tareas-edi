@@ -2,9 +2,9 @@ import { filterTasks } from '../src/utils/taskFilters';
 import type { Task } from '../src/types/task';
 
 const demo: Task[] = [
-  { id: '1', title: 'Validar login', description: '', priority: 'alta', completed: false },
-  { id: '2', title: 'Corregir navegación', description: '', priority: 'media', completed: true },
-  { id: '3', title: 'Revisar validaciones', description: '', priority: 'baja', completed: false },
+  { id: 1, title: 'Validar datos', description: '', createdAt: '2026-11-25T00:00:00Z', completed: false },
+  { id: 2, title: 'Corregir navegación', description: '', createdAt: '2026-11-25T00:00:00Z', completed: true },
+  { id: 3, title: 'Revisar validaciones', description: '', createdAt: '2026-11-25T00:00:00Z', completed: false },
 ];
 
 describe('filterTasks', () => {
@@ -12,7 +12,7 @@ describe('filterTasks', () => {
     expect(filterTasks(demo, 'VALIDAR', 'todas')).toHaveLength(1);
   });
   it('ignora espacios antes y después de la búsqueda', () => {
-    expect(filterTasks(demo, '  login  ', 'todas')).toHaveLength(1);
+    expect(filterTasks(demo, '  datos  ', 'todas')).toHaveLength(1);
   });
   it('filtra pendientes', () => {
     expect(filterTasks(demo, '', 'pendientes')).toHaveLength(2);
